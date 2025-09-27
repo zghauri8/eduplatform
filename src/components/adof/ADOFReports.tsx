@@ -17,6 +17,7 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
+  Calendar as CalendarIcon,
   Target,
   Award,
   FileText,
@@ -47,10 +48,22 @@ interface CVData {
   file?: File;
 }
 
+interface Analysis {
+  areas_for_improvement?: string[];
+  // Add other analysis properties here if they exist
+}
+
 interface ADOFReportsProps {
   selectedJob: SelectedJob;
   cvData: CVData;
-  testResults: TestResult;
+  testResults: {
+    data: {
+      percentage: number;
+      total_score: number;
+      max_score: number;
+      analysis?: Analysis;
+    };
+  };
   onBackToJobs: () => void;
 }
 
@@ -76,23 +89,27 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
   };
 
   const getRecommendation = (percentage: number) => {
-    if (percentage >= 80) {
+    if (percentage >= 60) {
       return {
-        status: 'Highly Recommended',
+        status: 'Recommended for Interview',
         icon: CheckCircle,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200',
-        description: 'Excellent fit for this position with strong alignment across key competencies.'
-      };
-    } else if (percentage >= 60) {
-      return {
-        status: 'Recommended with Development',
-        icon: AlertCircle,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-200',
-        description: 'Good potential with some areas for development and training.'
+        description: 'The candidate has demonstrated the required skills and knowledge for this position.',
+        action: (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-medium text-gray-700">Next Steps:</p>
+            <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Review the candidate's assessment results in detail</li>
+              <li>Evaluate the candidate's technical skills through practical exercises</li>
+              <li>Assess cultural fit and soft skills in a face-to-face meeting</li>
+              <li>Verify the candidate's experience and past projects</li>
+              <li>Discuss potential career growth and team fit</li>
+              <li>Check references from previous employers</li>
+            </ul>
+          </div>
+        )
       };
     } else {
       return {
@@ -101,7 +118,29 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
         color: 'text-red-600',
         bgColor: 'bg-red-50',
         borderColor: 'border-red-200',
-        description: 'Significant gaps identified that may require extensive development.'
+        description: 'The candidate did not meet the minimum score requirements for this position.',
+        action: (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Feedback:</span> Consider the following areas for improvement:
+            </p>
+            <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              {analysis?.areas_for_improvement && analysis.areas_for_improvement.length > 0 ? (
+                analysis.areas_for_improvement.map((area, i) => (
+                  <li key={i}>{area}</li>
+                ))
+              ) : (
+                <>
+                  <li>Review and strengthen core competencies for this role</li>
+                  <li>Enhance technical skills through hands-on projects and practice</li>
+                  <li>Gain more experience with industry-standard tools and technologies</li>
+                  <li>Improve problem-solving abilities through coding challenges</li>
+                  <li>Consider additional training or certification in key areas</li>
+                </>
+              )}
+            </ul>
+          </div>
+        )
       };
     }
   };
@@ -182,13 +221,13 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
       
       doc.setFontSize(11);
       // Get the percentage from the test results (it's a number, not a score property)
-      const percentage = testResults.percentage || 0;
+      const percentage = testResults.data.percentage || 0;
       doc.text(`Score: ${percentage}%`, 14, 170);
-      doc.text(`Recommendation: ${getRecommendation(percentage).text}`, 14, 177);
+      doc.text(`Recommendation: ${getRecommendation(percentage).status}`, 14, 177);
       
       // Add a simple table for test results
       const headers = ['Section', 'Score'];
-      const analysis = testResults.analysis || {};
+      const analysis = testResults.data.analysis || {};
       const data = [
         ['Technical Knowledge', `${analysis['technical'] || 0}%`],
         ['Problem Solving', `${analysis['problem_solving'] || 0}%`],
@@ -234,15 +273,15 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-900 min-h-screen p-6">
       {/* Header Section */}
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+      <Card className="mt-6 bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-2xl">
-            <Trophy className="w-6 h-6" />
-            <span>ADOF Assessment Report</span>
+          <CardTitle className="flex items-center space-x-2 text-2xl text-white">
+            <Trophy className="w-6 h-6 text-yellow-400" />
+            <span className="text-white">ADOF Assessment Report</span>
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base text-gray-300">
             Comprehensive evaluation results for job fit assessment
           </CardDescription>
         </CardHeader>
@@ -251,8 +290,8 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
             {/* Candidate Info */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold">Candidate Information</h3>
+                <User className="w-4 h-4 text-blue-400" />
+                <h3 className="font-semibold text-white">Candidate Information</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center space-x-2">
@@ -272,8 +311,8 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
             {/* Job Info */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
-                <Briefcase className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold">Position Details</h3>
+                <Briefcase className="w-4 h-4 text-blue-400" />
+                <h3 className="font-semibold text-white">Job Information</h3>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="font-medium">{selectedJob.title}</div>
@@ -288,27 +327,38 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
       </Card>
 
       {/* Overall Score */}
-      <Card className={`${recommendation.bgColor} ${recommendation.borderColor} border-2`}>
-        <CardHeader className="text-center">
+      <Card className={`${recommendation.bgColor} ${recommendation.borderColor} border-2 bg-gray-800`}>
+        <CardHeader className="pb-2 border-b border-gray-700">
           <CardTitle className="flex items-center justify-center space-x-2">
             <RecommendationIcon className={`w-6 h-6 ${recommendation.color}`} />
             <span>Overall Assessment</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center">
-            <div className={`text-6xl font-bold ${getScoreColor(percentage)} mb-2`}>
-              {percentage}%
+          <div className="flex flex-col space-y-6 text-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-400">Overall Score</h3>
+                <p className="text-4xl font-bold text-white">{percentage}%</p>
+                <p className="text-sm text-gray-400">Based on candidate's performance</p>
+              </div>
+              <Badge variant={getScoreBadgeVariant(percentage)} className="px-3 py-1 text-sm">
+                {recommendation.status}
+              </Badge>
             </div>
-            <Badge variant={getScoreBadgeVariant(percentage)} className="text-lg px-4 py-2 mb-2">
-              {recommendation.status}
-            </Badge>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {recommendation.description}
-            </p>
+            <div className="mt-4 p-4 rounded-lg border" style={{
+              backgroundColor: recommendation.bgColor,
+              borderColor: recommendation.borderColor
+            }}>
+              <div className="flex">
+                <RecommendationIcon className={`h-5 w-5 mt-0.5 ${recommendation.color}`} />
+                <p className="ml-2 text-sm text-gray-700">{recommendation.description}</p>
+              </div>
+              {recommendation.action}
+            </div>
           </div>
-          
-          <div className="space-y-2">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-white">Skills Match</h3>
             <div className="flex justify-between text-sm">
               <span>Assessment Score</span>
               <span>{total_score}/{max_score} points</span>
@@ -372,7 +422,7 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
               <div className="text-3xl font-bold text-primary mb-2">
                 {skillMatchPercentage}%
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-400">
                 Skills alignment with job requirements
               </p>
             </div>
@@ -472,7 +522,7 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="flex flex-col space-y-6 text-gray-200">
         <Button
           onClick={handleDownloadReport}
           size="lg"
@@ -492,216 +542,6 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
           New Assessment
         </Button>
       </div>
-
-      {/* Recommended Courses Section - Only show if score is below 60% */}
-      {percentage < 60 && (
-        <Card className="border-2 border-dashed border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-primary">
-              <GraduationCap className="w-5 h-5" />
-              <span>Recommended Courses</span>
-            </CardTitle>
-            <CardDescription>
-              Based on your assessment, we recommend these courses to improve your skills
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Course 1: Communication Skills */}
-              <CourseCard 
-                title="Effective Communication Masterclass"
-                description="Master the art of professional communication in the workplace."
-                icon={PlayCircle}
-                lectures={[
-                  { 
-                    id: 'comm-1',
-                    title: 'Introduction to Communication', 
-                    duration: '15 min', 
-                    type: 'video',
-                    content: 'This lecture covers the fundamentals of effective communication in professional settings. You\'ll learn about the communication process, common barriers, and strategies for clear and concise messaging.',
-                    resources: [
-                      { name: 'Communication Basics PDF', type: 'pdf', url: '/resources/communication-basics.pdf' },
-                      { name: 'Communication Styles Quiz', type: 'link', url: '/quizzes/communication-styles' }
-                    ]
-                  },
-                  { 
-                    id: 'comm-2',
-                    title: 'Active Listening Techniques', 
-                    duration: '20 min', 
-                    type: 'video',
-                    content: 'Learn how to become a better listener with proven active listening techniques. This module includes exercises to improve your listening skills in both one-on-one and group settings.',
-                    resources: [
-                      { name: 'Active Listening Worksheet', type: 'pdf', url: '/resources/active-listening-worksheet.pdf' },
-                      { name: 'Listening Skills Assessment', type: 'link', url: '/assessments/listening-skills' }
-                    ]
-                  },
-                  { 
-                    id: 'comm-3',
-                    title: 'Non-Verbal Communication', 
-                    duration: '18 min', 
-                    type: 'video',
-                    content: 'Discover the power of body language, facial expressions, and tone of voice in professional communication. Learn to read and use non-verbal cues effectively.',
-                    resources: [
-                      { name: 'Body Language Guide', type: 'pdf', url: '/resources/body-language-guide.pdf' },
-                      { name: 'Non-Verbal Communication Quiz', type: 'link', url: '/quizzes/non-verbal' }
-                    ]
-                  },
-                  { 
-                    id: 'comm-4',
-                    title: 'Written Communication Skills', 
-                    duration: '25 min', 
-                    type: 'video',
-                    content: 'Master the art of professional writing. Learn how to craft clear, concise, and effective emails, reports, and other business documents.',
-                    resources: [
-                      { name: 'Business Writing Templates', type: 'doc', url: '/resources/business-writing-templates.docx' },
-                      { name: 'Email Etiquette Guide', type: 'pdf', url: '/resources/email-etiquette.pdf' }
-                    ]
-                  },
-                  { 
-                    id: 'comm-5',
-                    title: 'Quiz: Test Your Knowledge', 
-                    duration: '10 min', 
-                    type: 'quiz',
-                    content: 'Test your understanding of the communication concepts covered in this course. This quiz will help reinforce your learning and identify areas for improvement.'
-                  }
-                ]}
-                progress={0}
-              />
-
-              {/* Course 2: Technical Writing */}
-              <CourseCard 
-                title="Technical Writing for Professionals"
-                description="Learn to create clear and effective technical documentation."
-                icon={BookOpen}
-                lectures={[
-                  { 
-                    id: 'tech-1',
-                    title: 'Basics of Technical Writing', 
-                    duration: '20 min', 
-                    type: 'video',
-                    content: 'Introduction to technical writing principles, including audience analysis, document design, and writing style guidelines for technical content.',
-                    resources: [
-                      { name: 'Technical Writing Style Guide', type: 'pdf', url: '/resources/tech-writing-style.pdf' },
-                      { name: 'Technical Writing Templates', type: 'doc', url: '/resources/tech-templates.docx' }
-                    ]
-                  },
-                  { 
-                    id: 'tech-2',
-                    title: 'Document Structure & Organization', 
-                    duration: '22 min', 
-                    type: 'video',
-                    content: 'Learn how to effectively structure technical documents for clarity and usability. Covers information architecture, headings, and document flow.',
-                    resources: [
-                      { name: 'Document Structure Examples', type: 'pdf', url: '/resources/document-structure.pdf' },
-                      { name: 'Information Architecture Guide', type: 'link', url: '/guides/info-architecture' }
-                    ]
-                  },
-                  { 
-                    id: 'tech-3',
-                    title: 'Writing Clear Instructions', 
-                    duration: '18 min', 
-                    type: 'video',
-                    content: 'Master the art of writing step-by-step instructions that are easy to follow and understand. Includes best practices for clarity and precision.',
-                    resources: [
-                      { name: 'Instruction Writing Template', type: 'doc', url: '/resources/instruction-template.docx' },
-                      { name: 'Instruction Writing Checklist', type: 'pdf', url: '/resources/instruction-checklist.pdf' }
-                    ]
-                  },
-                  { 
-                    id: 'tech-4',
-                    title: 'Technical Report Writing', 
-                    duration: '25 min', 
-                    type: 'video',
-                    content: 'Learn how to write comprehensive technical reports that effectively communicate complex information to various stakeholders.',
-                    resources: [
-                      { name: 'Technical Report Template', type: 'doc', url: '/resources/report-template.docx' },
-                      { name: 'Report Writing Guide', type: 'pdf', url: '/resources/report-guide.pdf' }
-                    ]
-                  },
-                  { 
-                    id: 'tech-5',
-                    title: 'Assignment: Write a Technical Guide', 
-                    duration: '30 min', 
-                    type: 'assignment',
-                    content: 'Apply what you\'ve learned by creating a technical guide on a topic of your choice. Your assignment will be reviewed by our instructors.',
-                    resources: [
-                      { name: 'Assignment Guidelines', type: 'pdf', url: '/resources/assignment-guidelines.pdf' },
-                      { name: 'Submission Portal', type: 'link', url: '/assignments/submit' }
-                    ]
-                  }
-                ]}
-                progress={0}
-              />
-
-              {/* Course 3: Presentation Skills */}
-              <CourseCard 
-                title="Powerful Presentation Skills"
-                description="Deliver engaging and effective presentations with confidence."
-                icon={Video}
-                lectures={[
-                  { 
-                    id: 'pres-1',
-                    title: 'Structuring Your Presentation', 
-                    duration: '18 min', 
-                    type: 'video',
-                    content: 'Learn how to structure your presentation for maximum impact. Covers the 10-20-30 rule, storytelling techniques, and creating a compelling narrative.',
-                    resources: [
-                      { name: 'Presentation Structure Template', type: 'ppt', url: '/resources/presentation-structure.pptx' },
-                      { name: 'Storytelling Guide', type: 'pdf', url: '/resources/storytelling-guide.pdf' }
-                    ]
-                  },
-                  { 
-                    id: 'pres-2',
-                    title: 'Engaging Your Audience', 
-                    duration: '20 min', 
-                    type: 'video',
-                    content: 'Discover techniques to capture and maintain your audience\'s attention. Includes interactive elements, questions, and audience participation strategies.',
-                    resources: [
-                      { name: 'Audience Engagement Techniques', type: 'pdf', url: '/resources/engagement-techniques.pdf' },
-                      { name: 'Interactive Presentation Ideas', type: 'link', url: '/resources/interactive-ideas' }
-                    ]
-                  },
-                  { 
-                    id: 'pres-3',
-                    title: 'Using Visual Aids Effectively', 
-                    duration: '15 min', 
-                    type: 'video',
-                    content: 'Learn how to create and use visual aids that enhance rather than distract from your presentation. Covers slide design, charts, and multimedia elements.',
-                    resources: [
-                      { name: 'Visual Design Principles', type: 'pdf', url: '/resources/visual-design.pdf' },
-                      { name: 'Slide Design Templates', type: 'ppt', url: '/resources/slide-templates.pptx' }
-                    ]
-                  },
-                  { 
-                    id: 'pres-4',
-                    title: 'Handling Q&A Sessions', 
-                    duration: '15 min', 
-                    type: 'video',
-                    content: 'Master the art of handling questions with confidence. Learn techniques for difficult questions, managing time, and staying in control of the session.',
-                    resources: [
-                      { name: 'Q&A Preparation Worksheet', type: 'pdf', url: '/resources/qa-worksheet.pdf' },
-                      { name: 'Difficult Questions Guide', type: 'link', url: '/resources/difficult-qa' }
-                    ]
-                  },
-                  { 
-                    id: 'pres-5',
-                    title: 'Final Presentation Project', 
-                    duration: '45 min', 
-                    type: 'project',
-                    content: 'Create and deliver a 5-minute presentation incorporating all the skills you\'ve learned. You\'ll receive personalized feedback from our instructors.',
-                    resources: [
-                      { name: 'Project Guidelines', type: 'pdf', url: '/resources/presentation-guidelines.pdf' },
-                      { name: 'Presentation Rubric', type: 'pdf', url: '/resources/presentation-rubric.pdf' },
-                      { name: 'Submission Portal', type: 'link', url: '/projects/submit' }
-                    ]
-                  }
-                ]}
-                progress={0}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
@@ -723,7 +563,7 @@ const CourseCard = ({
     duration: string; 
     type: 'video' | 'quiz' | 'assignment' | 'project';
     content?: string;
-    resources?: Array<{name: string; type: 'pdf' | 'doc' | 'link'; url: string}>;
+    resources?: Array<{name: string; type: 'pdf' | 'doc' | 'link' | 'ppt'; url: string}>;
   }>;
   progress: number;
 }) => {

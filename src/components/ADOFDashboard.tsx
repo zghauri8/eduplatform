@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,10 +32,11 @@ interface CVData {
 
 export const ADOFDashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<ADOFStep>('jobs');
   const [selectedJob, setSelectedJob] = useState<SelectedJob | null>(null);
   const [cvData, setCvData] = useState<CVData | null>(null);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<{ data: { percentage: number; total_score: number; max_score: number; analysis?: { areas_for_improvement?: string[] } } } | null>(null);
 
   const handleJobSelect = (job: SelectedJob) => {
     setSelectedJob(job);
@@ -46,16 +48,31 @@ export const ADOFDashboard: React.FC = () => {
     setCurrentStep('test');
   };
 
-  const handleTestComplete = (results: any) => {
+  interface TestResults {
+    data: {
+      percentage: number;
+      total_score: number;
+      max_score: number;
+      analysis?: {
+        areas_for_improvement?: string[];
+      };
+    };
+  }
+
+  const handleTestComplete = (results: TestResults) => {
     setTestResults(results);
     setCurrentStep('report');
   };
 
   const handleBackToJobs = () => {
+    // Reset the state
     setCurrentStep('jobs');
     setSelectedJob(null);
     setCvData(null);
     setTestResults(null);
+    
+    // Navigate back to the ADOF dashboard
+    navigate('/adof-dashboard');
   };
 
   const renderStepIndicator = () => {
