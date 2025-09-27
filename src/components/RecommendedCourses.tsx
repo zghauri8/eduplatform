@@ -23,6 +23,11 @@ interface RecommendedCoursesProps {
 }
 
 export const RecommendedCourses: React.FC<RecommendedCoursesProps> = ({ score, weakAreas = [] }) => {
+  // Don't show any recommendations if score is above 60
+  if (score > 60) {
+    return null;
+  }
+
   // Determine which courses to recommend based on score and weak areas
   const getRecommendedCourses = (): Course[] => {
     const baseCourses: Course[] = [

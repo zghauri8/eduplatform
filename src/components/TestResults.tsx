@@ -142,24 +142,26 @@ export const TestResults: React.FC<TestResultsProps> = ({
             </CardContent>
           </Card>
           
-          {/* Recommended Courses Section */}
-          <Card className="mb-8 border-dashed border-2 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BookOpen className="w-5 h-5 text-primary" />
-                <span>Recommended Learning Path</span>
-              </CardTitle>
-              <CardDescription>
-                Based on your assessment results, we've curated these courses to help you improve your skills.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RecommendedCourses 
-                score={percentage} 
-                weakAreas={weakAreas}
-              />
-            </CardContent>
-          </Card>
+          {/* Recommended Courses Section - Only show if score is 60 or below */}
+          {percentage <= 60 && (
+            <Card className="mb-8 border-dashed border-2 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span>Recommended Learning Path</span>
+                </CardTitle>
+                <CardDescription>
+                  Based on your assessment results, we've curated these courses to help you improve your skills.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RecommendedCourses 
+                  score={percentage} 
+                  weakAreas={weakAreas}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">

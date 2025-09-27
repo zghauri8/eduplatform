@@ -89,36 +89,18 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
   };
 
   const getRecommendation = (percentage: number) => {
-    if (percentage >= 60) {
+    if (percentage > 60) {
+      return null; // No recommendation needed for scores above 60
+    }
+    
+    if (percentage >= 0 && percentage <= 60) {
       return {
-        status: 'Recommended for Interview',
-        icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200',
-        description: 'The candidate has demonstrated the required skills and knowledge for this position.',
-        action: (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm font-medium text-gray-700">Next Steps:</p>
-            <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-              <li>Review the candidate's assessment results in detail</li>
-              <li>Evaluate the candidate's technical skills through practical exercises</li>
-              <li>Assess cultural fit and soft skills in a face-to-face meeting</li>
-              <li>Verify the candidate's experience and past projects</li>
-              <li>Discuss potential career growth and team fit</li>
-              <li>Check references from previous employers</li>
-            </ul>
-          </div>
-        )
-      };
-    } else {
-      return {
-        status: 'Not Recommended',
+        status: 'Needs Improvement',
         icon: AlertCircle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        description: 'The candidate did not meet the minimum score requirements for this position.',
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-50',
+        borderColor: 'border-yellow-200',
+        description: 'The candidate may need additional training or experience to meet the job requirements.',
         action: (
           <div className="mt-4 space-y-3">
             <p className="text-sm text-gray-600">
@@ -143,10 +125,13 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
         )
       };
     }
+    
+    return null; // Fallback for any unexpected cases
+  
   };
 
   const recommendation = getRecommendation(percentage);
-  const RecommendationIcon = recommendation.icon;
+  const RecommendationIcon = recommendation?.icon || CheckCircle; // Default to CheckCircle if no recommendation (100% case)
 
   // Calculate skill match
   const skillMatch = cvData.skills.filter(skill => 
@@ -326,148 +311,7 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Overall Score */}
-      <Card className={`${recommendation.bgColor} ${recommendation.borderColor} border-2 bg-gray-800`}>
-        <CardHeader className="pb-2 border-b border-gray-700">
-          <CardTitle className="flex items-center justify-center space-x-2">
-            <RecommendationIcon className={`w-6 h-6 ${recommendation.color}`} />
-            <span>Overall Assessment</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex flex-col space-y-6 text-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-400">Overall Score</h3>
-                <p className="text-4xl font-bold text-white">{percentage}%</p>
-                <p className="text-sm text-gray-400">Based on candidate's performance</p>
-              </div>
-              <Badge variant={getScoreBadgeVariant(percentage)} className="px-3 py-1 text-sm">
-                {recommendation.status}
-              </Badge>
-            </div>
-            <div className="mt-4 p-4 rounded-lg border" style={{
-              backgroundColor: recommendation.bgColor,
-              borderColor: recommendation.borderColor
-            }}>
-              <div className="flex">
-                <RecommendationIcon className={`h-5 w-5 mt-0.5 ${recommendation.color}`} />
-                <p className="ml-2 text-sm text-gray-700">{recommendation.description}</p>
-              </div>
-              {recommendation.action}
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h3 className="font-semibold text-white">Skills Match</h3>
-            <div className="flex justify-between text-sm">
-              <span>Assessment Score</span>
-              <span>{total_score}/{max_score} points</span>
-            </div>
-            <Progress value={percentage} className="h-3" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Detailed Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Competency Analysis */}
-        {Object.keys(analysis).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5" />
-                <span>Competency Analysis</span>
-              </CardTitle>
-              <CardDescription>
-                Assessment of key traits and competencies
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(analysis).map(([trait, level]) => (
-                  <div key={trait} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Target className="w-4 h-4 text-primary" />
-                      <div>
-                        <h4 className="font-medium text-foreground">{trait}</h4>
-                        <p className="text-xs text-muted-foreground">Behavioral trait</p>
-                      </div>
-                    </div>
-                    <Badge 
-                      variant={level === 'Strength' ? 'default' : 'secondary'}
-                      className="text-sm"
-                    >
-                      {level}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Skills Match Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5" />
-              <span>Skills Match Analysis</span>
-            </CardTitle>
-            <CardDescription>
-              Alignment between candidate skills and job requirements
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {skillMatchPercentage}%
-              </div>
-              <p className="text-sm text-gray-400">
-                Skills alignment with job requirements
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Matching Skills</span>
-                <span>{skillMatch.length}/{selectedJob.skills.length}</span>
-              </div>
-              <Progress value={skillMatchPercentage} className="h-2" />
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-semibold text-green-600 mb-2">Matching Skills</h4>
-                <div className="flex flex-wrap gap-1">
-                  {skillMatch.length > 0 ? skillMatch.map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                      {skill}
-                    </Badge>
-                  )) : (
-                    <span className="text-xs text-muted-foreground">No direct matches found</span>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Additional Candidate Skills</h4>
-                <div className="flex flex-wrap gap-1">
-                  {cvData.skills.filter(skill => !skillMatch.includes(skill)).slice(0, 5).map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
-                  {cvData.skills.filter(skill => !skillMatch.includes(skill)).length > 5 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{cvData.skills.filter(skill => !skillMatch.includes(skill)).length - 5} more
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Removed Overall Score, Competency Analysis, and Skills Match Analysis sections */}
 
       {/* Candidate Profile Summary */}
       <Card>
@@ -538,8 +382,8 @@ export const ADOFReports: React.FC<ADOFReportsProps> = ({
           size="lg"
           className="px-8 py-6 text-lg font-medium"
         >
-          <RotateCcw className="mr-3 h-5 w-5" />
-          New Assessment
+          <CheckCircle className="mr-3 h-5 w-5" />
+          Thank you for applying
         </Button>
       </div>
     </div>
